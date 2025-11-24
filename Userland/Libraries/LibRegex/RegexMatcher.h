@@ -130,7 +130,15 @@ public:
             start_offset = match.global_offset + match.view.length();
             GenericLexer lexer(replacement_pattern);
             while (!lexer.is_eof()) {
+                if (lexer.consume_specific('&')) {
+                    builder.append(result.capture_group_matches[i][0].view.to_byte_string());
+                    continue;
+                }
                 if (lexer.consume_specific('\\')) {
+                    if (lexer.consume_specific('&')) {
+                        builder.append('&');
+                        continue;
+                    }
                     if (lexer.consume_specific('\\')) {
                         builder.append('\\');
                         continue;
@@ -142,7 +150,7 @@ public:
                         builder.appendff("\\{}", number);
                     }
                 } else {
-                    builder.append(lexer.consume_while([](auto ch) { return ch != '\\'; }));
+                    builder.append(lexer.consume_while([](auto ch) { return ch != '\\' && ch != '&'; }));
                 }
             }
         }
